@@ -1225,15 +1225,6 @@ Rules:
     localStorage.setItem(LS.cache, JSON.stringify(seedData));
   }
   
-  // Fetch weather
-  fetch('/api/weather').then(r => r.json()).then(data => {
-    const condEl = document.querySelector('.weather-header .condition');
-    if (condEl) condEl.textContent = `${Math.round(data.temperature)}°F • ${data.condition}`;
-  }).catch(() => {});
-  
-  // Fetch calendar
-  fetch('/api/calendar').then(r => r.json()).catch(() => {});
-  
   init();
 })();
 </script>
