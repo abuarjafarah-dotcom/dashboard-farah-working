@@ -396,11 +396,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
   // ---------- state ----------
   // S is the one canonical in-memory copy. Every tab renders from it.
   const emptyState = () => ({ tasks: {}, projects: {}, grocery: {}, notes: {}, dumps: {}, meta: {} });
-  // Seed data on first load
-  if (!localStorage.getItem(LS.cache)) {
+  // Load from localStorage, fallback to seed data
+  let cachedData = lsGet(LS.cache, null);
+  let S = Object.assign(emptyState(), cachedData || seedData);
+  // Also persist seed to localStorage for consistency
+  if (!cachedData) {
     lsSet(LS.cache, seedData);
   }
-  let S = Object.assign(emptyState(), lsGet(LS.cache, {}));
   KINDS.forEach(k => { if (!S[k] || typeof S[k] !== 'object') S[k] = {}; });
   let pending = lsGet(LS.pending, {});           // "kind/id" -> object | null (delete), survives reloads until synced
   let ui = Object.assign({ tab: 'home', sub: 'today', open: {}, showDone: false }, lsGet(LS.ui, {}));
