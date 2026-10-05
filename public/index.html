@@ -486,8 +486,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
   }
 
   function init() {
+    console.log('[init] Starting...');
     // On static HTML or no Claude context, go straight to local mode
     if (!window.claude || typeof window.claude.use !== 'function') { 
+      console.log('[init] No window.claude, calling goLocal()');
       goLocal(); 
       return; 
     }
@@ -525,7 +527,20 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
       })
       .catch(() => goLocal());
   }
-  function goLocal() { mode = 'local'; wireEvents(); render(); setInterval(checkDay, 60000); document.addEventListener('visibilitychange', checkDay); $('dumpText').value = lsGet(LS.draft, '') || ''; maybeMigrate(true); }
+  function goLocal() { 
+    console.log('[goLocal] Entering local mode');
+    mode = 'local'; 
+    console.log('[goLocal] Calling wireEvents');
+    wireEvents(); 
+    console.log('[goLocal] Calling render');
+    render(); 
+    console.log('[goLocal] Setting up intervals');
+    setInterval(checkDay, 60000); 
+    document.addEventListener('visibilitychange', checkDay); 
+    $('dumpText').value = lsGet(LS.draft, '') || ''; 
+    maybeMigrate(true); 
+    console.log('[goLocal] Complete');
+  }
 
   function checkDay() {
     if (today() !== lastDay) { lastDay = today(); render(); }
