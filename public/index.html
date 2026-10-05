@@ -1184,6 +1184,56 @@ Rules:
     el.value = ''; addGrocery(v, $('gStore').value);
   }
 
+  // Seed data
+  const seedData = {
+    tasks: {
+      "t-kids-buy-pumpkins": { id: "t-kids-buy-pumpkins", title: "Kids buy pumpkins", category: "kids", status: "done", date: "2026-10-04", createdAt: 1696329600000, doneAt: 1696329600000 },
+      "t-bath-sleep": { id: "t-bath-sleep", title: "Bath & sleep", category: "kids", status: "done", time: "7:00 PM", date: "2026-10-04", createdAt: 1696329600000, doneAt: 1696329600000 },
+      "t-school-pickup": { id: "t-school-pickup", title: "School pick up", category: "kids", status: "done", date: "2026-10-04", createdAt: 1696329600000, doneAt: 1696329600000 },
+      "t-arabic-quran": { id: "t-arabic-quran", title: "Arabic Quran game", category: "kids", status: "done", time: "6:30 PM", date: "2026-10-04", createdAt: 1696329600000, doneAt: 1696329600000 },
+      "t-numberblocks": { id: "t-numberblocks", title: "Numberblocks", category: "kids", status: "done", time: "6:15 PM", date: "2026-10-04", createdAt: 1696329600000, doneAt: 1696329600000 }
+    },
+    projects: {
+      "p-islamic-explorer": { id: "p-islamic-explorer", name: "Islamic Explorer (Lovable)", category: "self", status: "active", notes: "", createdAt: 1696329600000 },
+      "p-world-mastery": { id: "p-world-mastery", name: "World Mastery Game", category: "self", status: "active", notes: "", createdAt: 1696329600000 },
+      "p-cooking-game": { id: "p-cooking-game", name: "Cooking Game with Teta", category: "self", status: "active", notes: "", createdAt: 1696329600000 },
+      "p-apple-picking": { id: "p-apple-picking", name: "Apple Picking Outing", category: "self", status: "active", notes: "", createdAt: 1696329600000 },
+      "p-baby-quilt": { id: "p-baby-quilt", name: "Baby Clothes Quilt", category: "self", status: "active", notes: "", createdAt: 1696329600000 },
+      "p-dashboard": { id: "p-dashboard", name: "Dashboard Brain Dump", category: "self", status: "active", notes: "", createdAt: 1696329600000 },
+      "p-summer-book": { id: "p-summer-book", name: "Summer 2026 Picture Book", category: "self", status: "active", notes: "", createdAt: 1696329600000 }
+    },
+    grocery: {
+      "g-costco-yogurt-1": { id: "g-costco-yogurt-1", title: "Stone field yogurt pouches", store: "Costco", checked: false, createdAt: 1696329600000 },
+      "g-costco-yogurt-2": { id: "g-costco-yogurt-2", title: "Yogurt pouches", store: "Costco", checked: false, createdAt: 1696329600000 },
+      "g-costco-berries": { id: "g-costco-berries", title: "Strawberries", store: "Costco", checked: false, createdAt: 1696329600000 },
+      "g-costco-beef": { id: "g-costco-beef", title: "Ground beef", store: "Costco", checked: false, createdAt: 1696329600000 },
+      "g-costco-5": { id: "g-costco-5", title: "Item 5", store: "Costco", checked: false, createdAt: 1696329600000 },
+      "g-costco-6": { id: "g-costco-6", title: "Item 6", store: "Costco", checked: false, createdAt: 1696329600000 }
+    },
+    notes: {
+      "n-maqluba": { id: "n-maqluba", text: "Maqlube dinner already on list for today", projectId: null, createdAt: 1696329600000 }
+    },
+    meta: {
+      dress: { big: "Long sleeves + windbreaker", baby: "Warm layers + light jacket" },
+      stores: ["Costco"],
+      keyTimes: ["Yousef nap: max 90 min", "Leave for pickup: 2:30 PM", "School pickup: 3:00 PM", "Arabic Quran game: 6:30 PM", "Bath & bedtime: 7:00 PM"]
+    }
+  };
+  
+  const LS = { cache: 'fmd4-cache', pending: 'fmd4-pending', ui: 'fmd4-ui', draft: 'fmd4-draft', migrated: 'fmd4-migrated-v3' };
+  if (!localStorage.getItem(LS.cache)) {
+    localStorage.setItem(LS.cache, JSON.stringify(seedData));
+  }
+  
+  // Fetch weather
+  fetch('/api/weather').then(r => r.json()).then(data => {
+    const condEl = document.querySelector('.weather-header .condition');
+    if (condEl) condEl.textContent = `${Math.round(data.temperature)}°F • ${data.condition}`;
+  }).catch(() => {});
+  
+  // Fetch calendar
+  fetch('/api/calendar').then(r => r.json()).catch(() => {});
+  
   init();
 })();
 </script>
