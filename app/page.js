@@ -1,26 +1,173 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('home');
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [brainDumpInput, setBrainDumpInput] = useState('');
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Get current day section based on time
+  const getDaySection = () => {
+    const hour = currentTime.getHours();
+    if (hour >= 6 && hour < 9) return 'Morning';
+    if (hour >= 9 && hour < 15) return 'Day';
+    if (hour >= 15 && hour < 18) return 'Afternoon';
+    return 'Evening';
+  };
+
+  // Format time as HH:MM AM/PM
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Today's anchors (the skeleton of the day)
+  const anchors = [
+    { time: '8:30', label: 'Drop-off (RMS)', completed: currentTime.getHours() >= 9 },
+    { time: '10:00', label: 'Dr appointment', completed: currentTime.getHours() >= 11 },
+    { time: '3:30', label: 'School pickup', completed: currentTime.getHours() >= 16 },
+    { time: '5:30', label: 'Start dinner', completed: currentTime.getHours() >= 18 },
+    { time: '8:15', label: 'Bedtime routine', completed: currentTime.getHours() >= 21 },
+  ];
+
+  // Must-do items
+  const mustDoItems = [
+    { id: 1, text: 'Call pediatrician', context: 'Daycare asked', time: 'Flexible' },
+    { id: 2, text: 'Daycare forms + signature', context: 'Due by Friday', time: 'Before pickup' },
+  ];
+
+  // Should-do items
+  const shouldDoItems = [
+    { id: 1, text: 'Check Hamad\'s school paper' },
+    { id: 2, text: 'Order next week\'s groceries', context: 'By Friday EOD' },
+  ];
+
+  // If-I-have-time items
+  const optionalItems = [
+    { id: 1, text: 'Work on dashboard project', time: '~60 min' },
+    { id: 2, text: 'Organize photos', time: '~30 min' },
+  ];
+
+  // Get next anchor
+  const getNextAnchor = () => {
+    return anchors.find(a => !a.completed) || anchors[anchors.length - 1];
+  };
+
+  // Render Home tab with three-zone layout
+  const renderHome = () => {
+    const daySection = getDaySection();
+    const nextAnchor = getNextAnchor();
+
+    return (
+      <div className={styles.homeContainer}>
+        {/* ZONE 1: NOW */}
+        <div className={styles.zoneNow}>
+          <div className={styles.daySection}>{daySection}</div>
+          <div className={styles.currentTime}>{formatTime(currentTime)}</div>
+          <div className={styles.nowContent}>
+            {daySection === 'Morning' && (
+              <>
+                <p className={styles.nowAction}>Getting ready for drop-off</p>
+                <p className={styles.nextAction}>Next → 8:30 Leave for RMS</p>
+              </>
+            )}
+            {daySection === 'Day' && (
+              <>
+                <p className={styles.nowAction}>Focus time available</p>
+                <p className={styles.nextAction}>Next → {nextAnchor.time} {nextAnchor.label}</p>
+              </>
+            )}
+            {daySection === 'Afternoon' && (
+              <>
+                <p className={styles.nowAction}>School activities</p>
+                <p className={styles.nextAction}>Next → {nextAnchor.time} {nextAnchor.label}</p>
+              </>
+            )}
+            {daySection === 'Evening' && (
+              <>
+                <p className={styles.nowAction}>Bedtime routine</p>
+                <p className={styles.nextAction}>Next → {nextAnchor.time} {nextAnchor.label}</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ZONE 2: TODAY'S TIMELINE */}
+        <div className={styles.zoneTimeline}>
+          <h3 className={styles.zoneTitle}>Today's Day</h3>
+          <div className={styles.timeline}>
+            {anchors.map((anchor, idx) => (
+              <div key={idx} className={`${styles.timelineItem} ${anchor.completed ? styles.completed : ''} ${anchor.time === nextAnchor.time ? styles.current : ''}`}>
+                <span className={styles.time}>{anchor.time}</span>
+                <span className={styles.label}>{anchor.label}</span>
+                {anchor.completed && <span className={styles.checkmark}>✓</span>}
+                {anchor.time === nextAnchor.time && <span className={styles.arrow}>→</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ZONE 3: TODAY'S IMPORTANT THINGS */}
+        <div className={styles.zoneImportant}>
+          <div className={styles.taskSection}>
+            <h3 className={styles.sectionTitle}>Must Do</h3>
+            {mustDoItems.map(item => (
+              <div key={item.id} className={styles.taskItem}>
+                <input type="checkbox" className={styles.checkbox} />
+                <div className={styles.taskContent}>
+                  <p className={styles.taskText}>{item.text}</p>
+                  {item.context && <p className={styles.taskContext}>{item.context} · {item.time}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.taskSection}>
+            <h3 className={styles.sectionTitle}>Should Do</h3>
+            {shouldDoItems.map(item => (
+              <div key={item.id} className={styles.taskItem}>
+                <input type="checkbox" className={styles.checkbox} />
+                <div className={styles.taskContent}>
+                  <p className={styles.taskText}>{item.text}</p>
+                  {item.context && <p className={styles.taskContext}>{item.context}</p>}
+                </div>
+              </div>
+            ))}
+            <button className={styles.expandButton}>+ {optionalItems.length} more if I have time</button>
+          </div>
+
+          {/* Brain Dump */}
+          <div className={styles.brainDump}>
+            <input
+              type="text"
+              placeholder="What's on your mind?"
+              value={brainDumpInput}
+              onChange={(e) => setBrainDumpInput(e.target.value)}
+              className={styles.brainDumpInput}
+            />
+            <div className={styles.brainDumpButtons}>
+              <button className={styles.captureBtn}>Capture</button>
+              <button className={styles.dumpBtn}>Brain Dump</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'home':
-        return (
-          <div className={styles.tabContent}>
-            <h2>Morning Routine</h2>
-            <div className={styles.taskList}>
-              <div className={styles.task}>Hamad up & ready — 7:30am</div>
-              <div className={styles.task}>Talal up & ready — 7:45am</div>
-              <div className={styles.task}>RMS backpack ready — 8:00am</div>
-              <div className={styles.task}>Yousef morning routine — 8:15am</div>
-              <div className={styles.task}>Drop-off — 8:30am</div>
-            </div>
-          </div>
-        );
+        return renderHome();
 
       case 'schedule':
         return (
