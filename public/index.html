@@ -485,36 +485,47 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
     });
   }
 
-  async function init() {
+  function init() {
+    // On static HTML or no Claude context, go straight to local mode
+    if (!window.claude || typeof window.claude.use !== 'function') { 
+      goLocal(); 
+      return; 
+    }
+    
+    // Cloud mode setup (for future use)
     wireEvents();
     render();
     setInterval(checkDay, 60000);
     document.addEventListener('visibilitychange', checkDay);
     $('dumpText').value = lsGet(LS.draft, '') || '';
 
-    if (!window.claude || typeof window.claude.use !== 'function') { goLocal(); return; }
     window.claude.use('sample').then(s => { sample = s; renderHint(); }).catch(() => {});
-    let d = null, u = null, uid = null;
-    try { [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]); } catch (e) {}
-    if (u) { try { uid = await u.id(); } catch (e) {} }
-    if (!d || !uid) { goLocal(); return; }
-
-    db = d; base = `data/users/${uid}/fmd`; mode = 'cloud';
-    const col = n => db.collection(`${base}/${n}`);
-    subscribe('tasksOpen', col('tasks').where('status', 'in', ['todo', 'doing']));
-    subscribe('tasksClosed', col('tasks').where('status', 'in', ['done', 'dropped']).orderBy('updatedAt', 'desc').limit(500));
-    subscribe('projects', col('projects'));
-    subscribe('grocery', col('grocery').where('archived', '==', false));
-    subscribe('notes', col('notes'));
-    subscribe('dumps', col('dumps').where('processed', '==', false));
-    db.doc(`${base}/meta/main`).onSnapshot(s => {
-      srv.meta = s.exists ? { main: Object.assign({}, s.data()) } : {};
-      firstSeen.add('meta'); applyServer(); maybeMigrate();
-    }, e => console.warn('meta', e));
-    renderSync();
-    scheduleFlush(0);
+    Promise.all([window.claude.use('db'), window.claude.use('user')])
+      .then(([d, u]) => {
+        db = d; 
+        return u ? u.id().then(uid => ({ uid, db: d })) : null;
+      })
+      .then(result => {
+        if (!result) { goLocal(); return; }
+        const { uid, db: d } = result;
+        const col = n => d.collection(`data/users/${uid}/fmd/${n}`);
+        subscribe('tasksOpen', col('tasks').where('status', 'in', ['todo', 'doing']));
+        subscribe('tasksClosed', col('tasks').where('status', 'in', ['done', 'dropped']).orderBy('updatedAt', 'desc').limit(500));
+        subscribe('projects', col('projects'));
+        subscribe('grocery', col('grocery').where('archived', '==', false));
+        subscribe('notes', col('notes'));
+        subscribe('dumps', col('dumps').where('processed', '==', false));
+        d.doc(`data/users/${uid}/fmd/meta/main`).onSnapshot(s => {
+          srv.meta = s.exists ? { main: Object.assign({}, s.data()) } : {};
+          firstSeen.add('meta'); applyServer(); maybeMigrate();
+        }, e => console.warn('meta', e));
+        mode = 'cloud';
+        renderSync();
+        scheduleFlush(0);
+      })
+      .catch(() => goLocal());
   }
-  function goLocal() { mode = 'local'; render(); maybeMigrate(true); }
+  function goLocal() { mode = 'local'; wireEvents(); render(); setInterval(checkDay, 60000); document.addEventListener('visibilitychange', checkDay); $('dumpText').value = lsGet(LS.draft, '') || ''; maybeMigrate(true); }
 
   function checkDay() {
     if (today() !== lastDay) { lastDay = today(); render(); }
