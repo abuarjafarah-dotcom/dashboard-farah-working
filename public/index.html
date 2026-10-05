@@ -1226,6 +1226,31 @@ Rules:
   }
   
   init();
+  
+  // Fetch weather (non-blocking)
+  setTimeout(() => {
+    fetch('/api/weather', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json())
+      .then(data => {
+        const condEl = document.querySelector('.weather-header .condition');
+        if (condEl && data.temperature) condEl.textContent = `${Math.round(data.temperature)}°F • ${data.condition}`;
+      })
+      .catch(() => {});
+  }, 100);
+  
+  // Fetch calendar (non-blocking)
+  setTimeout(() => {
+    fetch('/api/calendar', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json())
+      .catch(() => {});
+  }, 200);
+  
+  // Fetch Gmail (non-blocking)
+  setTimeout(() => {
+    fetch('/api/gmail', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json())
+      .catch(() => {});
+  }, 300);
 })();
 </script>
 </body>
